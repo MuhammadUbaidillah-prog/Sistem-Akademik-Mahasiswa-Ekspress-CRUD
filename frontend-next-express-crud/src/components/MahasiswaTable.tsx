@@ -8,6 +8,8 @@ type Props = {
   onDelete: (id: number) => Promise<void>;
 };
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+
 export default function MahasiswaTable({ mahasiswa, onEdit, onDelete }: Props) {
   if (mahasiswa.length === 0) {
     return (
@@ -73,9 +75,19 @@ export default function MahasiswaTable({ mahasiswa, onEdit, onDelete }: Props) {
                 </td>
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div className="avatar" style={{ background: avatarBg }}>
-                      {initial}
-                    </div>
+                    {item.foto ? (
+                      <img
+                        src={`${BACKEND_URL}/uploads/mahasiswa/${item.foto}`}
+                        alt={item.nama}
+                        width={40}
+                        height={40}
+                        style={{ borderRadius: "50%", objectFit: "cover", width: 40, height: 40 }}
+                      />
+                    ) : (
+                      <div className="avatar" style={{ background: avatarBg }}>
+                        {initial}
+                      </div>
+                    )}
                     <div>
                       <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
                         {item.nama}
@@ -91,7 +103,7 @@ export default function MahasiswaTable({ mahasiswa, onEdit, onDelete }: Props) {
                 </td>
                 <td>
                   <span className="badge badge-primary">
-                    {item.prodi}
+                    {item.nama_prodi}
                   </span>
                 </td>
                 <td>

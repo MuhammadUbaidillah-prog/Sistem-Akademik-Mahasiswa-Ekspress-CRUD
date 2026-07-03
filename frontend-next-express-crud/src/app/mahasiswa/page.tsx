@@ -8,8 +8,9 @@ import {
   createMahasiswa,
   deleteMahasiswa,
   getMahasiswa,
+  getProdi,
   Mahasiswa,
-  MahasiswaInput,
+  Prodi,
   updateMahasiswa,
 } from "@/lib/api";
 
@@ -20,16 +21,42 @@ export default function MahasiswaPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterAngkatan, setFilterAngkatan] = useState("");
+  // Search, Filter, & Pagination state
+  const [search, setSearch] = useState("");
+  const [prodiId, setProdiId] = useState("");
+  const [prodis, setProdis] = useState<Prodi[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPage, setTotalPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  // Fetch list of prodi for the filter dropdown
+  useEffect(() => {
+    const fetchProdis = async () => {
+      try {
+        const data = await getProdi();
+        setProdis(data);
+      } catch (err) {
+        console.error("Gagal mengambil data prodi:", err);
+      }
+    };
+    fetchProdis();
+  }, []);
 
   const loadMahasiswa = async () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getMahasiswa();
-      setMahasiswa(data);
+      const result = await getMahasiswa({
+        search,
+        prodi_id: prodiId,
+        page,
+        limit,
+      });
+
+      setMahasiswa(result.data);
+      setTotal(result.meta.total);
+      setTotalPage(result.meta.totalPage);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mengambil data mahasiswa");
     } finally {
@@ -37,24 +64,37 @@ export default function MahasiswaPage() {
     }
   };
 
+  // Trigger reload when page changes
   useEffect(() => {
     loadMahasiswa();
-  }, []);
+  }, [page]);
 
-  const handleSubmit = async (payload: MahasiswaInput) => {
+  // Trigger reload and reset to page 1 when prodi filter changes
+  useEffect(() => {
+    setPage(1);
+    loadMahasiswa();
+  }, [prodiId]);
+
+  const handleSearch = () => {
+    setPage(1);
+    loadMahasiswa();
+  };
+
+  const handleSubmit = async (formData: FormData) => {
     try {
       setMessage("");
       setError("");
 
       if (selectedMahasiswa) {
-        await updateMahasiswa(selectedMahasiswa.id, payload);
+        await updateMahasiswa(selectedMahasiswa.id, formData);
         setMessage("Data mahasiswa berhasil diperbarui");
       } else {
-        await createMahasiswa(payload);
+        await createMahasiswa(formData);
         setMessage("Data mahasiswa berhasil ditambahkan");
       }
 
       setSelectedMahasiswa(null);
+      setPage(1);
       await loadMahasiswa();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan data");
@@ -77,27 +117,9 @@ export default function MahasiswaPage() {
   };
 
   // Statistics calculation
-  const totalMahasiswa = mahasiswa.length;
-  const uniqueProdis = new Set(mahasiswa.map((m) => m.prodi.trim().toLowerCase())).size;
   const latestAngkatan = mahasiswa.length > 0 
     ? Math.max(...mahasiswa.map((m) => m.angkatan)) 
     : "-";
-
-  // Filtered lists
-  const filteredMahasiswa = mahasiswa.filter((item) => {
-    const matchesSearch =
-      item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.nim.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.prodi.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesAngkatan =
-      filterAngkatan === "" || item.angkatan.toString() === filterAngkatan;
-
-    return matchesSearch && matchesAngkatan;
-  });
-
-  // Extract unique batches for the filter dropdown
-  const listAngkatan = Array.from(new Set(mahasiswa.map((m) => m.angkatan))).sort((a, b) => b - a);
 
   return (
     <main className="container animate-fade-in">
@@ -163,7 +185,7 @@ export default function MahasiswaPage() {
             </svg>
           </div>
           <div className="stat-info">
-            <div className="stat-value">{loading ? "..." : totalMahasiswa}</div>
+            <div className="stat-value">{loading && total === 0 ? "..." : total}</div>
             <div className="stat-label">Total Mahasiswa</div>
           </div>
         </div>
@@ -176,7 +198,7 @@ export default function MahasiswaPage() {
             </svg>
           </div>
           <div className="stat-info">
-            <div className="stat-value">{loading ? "..." : uniqueProdis}</div>
+            <div className="stat-value">{prodis.length}</div>
             <div className="stat-label">Program Studi</div>
           </div>
         </div>
@@ -191,7 +213,7 @@ export default function MahasiswaPage() {
             </svg>
           </div>
           <div className="stat-info">
-            <div className="stat-value">{loading ? "..." : latestAngkatan}</div>
+            <div className="stat-value">{loading && mahasiswa.length === 0 ? "..." : latestAngkatan}</div>
             <div className="stat-label">Angkatan Terbaru</div>
           </div>
         </div>
@@ -218,13 +240,13 @@ export default function MahasiswaPage() {
               <line x1="3" y1="9" x2="21" y2="9"></line>
               <line x1="3" y1="15" x2="21" y2="15"></line>
             </svg>
-            Daftar Mahasiswa ({filteredMahasiswa.length})
+            Daftar Mahasiswa ({total})
           </h2>
 
           {/* Live Search and Filter Bar */}
-          <div className="search-filter-bar">
-            <div className="search-input-wrapper">
-              <span className="search-icon">
+          <div className="search-filter-bar" style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <div className="search-input-wrapper" style={{ flex: 1, display: "flex", alignItems: "center", position: "relative" }}>
+              <span className="search-icon" style={{ position: "absolute", left: 12 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -232,24 +254,32 @@ export default function MahasiswaPage() {
               </span>
               <input
                 type="text"
-                placeholder="Cari nama, NIM, atau prodi..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari NIM atau nama..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                }}
+                style={{ width: "100%", padding: "10px 12px 10px 38px", borderRadius: "6px", border: "1px solid var(--border-color)", background: "var(--bg-card)", color: "var(--text-primary)" }}
               />
             </div>
 
             <select
-              style={{ minWidth: 140 }}
-              value={filterAngkatan}
-              onChange={(e) => setFilterAngkatan(e.target.value)}
+              style={{ minWidth: 160, padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color)", background: "var(--bg-card)", color: "var(--text-primary)" }}
+              value={prodiId}
+              onChange={(e) => setProdiId(e.target.value)}
             >
-              <option value="">Semua Angkatan</option>
-              {listAngkatan.map((batch) => (
-                <option key={batch} value={batch.toString()}>
-                  Angkatan {batch}
+              <option value="">Semua Prodi</option>
+              {prodis.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.nama_prodi}
                 </option>
               ))}
             </select>
+
+            <button className="btn-primary" onClick={handleSearch} style={{ padding: "8px 16px" }}>
+              Cari
+            </button>
           </div>
 
           {loading ? (
@@ -272,11 +302,38 @@ export default function MahasiswaPage() {
               `}</style>
             </div>
           ) : (
-            <MahasiswaTable
-              mahasiswa={filteredMahasiswa}
-              onEdit={setSelectedMahasiswa}
-              onDelete={handleDelete}
-            />
+            <>
+              <MahasiswaTable
+                mahasiswa={mahasiswa}
+                onEdit={setSelectedMahasiswa}
+                onDelete={handleDelete}
+              />
+
+              {/* Pagination Controls */}
+              <div className="pagination-bar" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24, borderTop: "1px solid var(--border-color)", paddingTop: 16 }}>
+                <button 
+                  className="btn-secondary" 
+                  disabled={page <= 1} 
+                  onClick={() => setPage(page - 1)}
+                  style={{ padding: "6px 12px", fontSize: "0.875rem" }}
+                >
+                  Previous
+                </button>
+                
+                <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                  Halaman {page} dari {totalPage || 1}
+                </span>
+                
+                <button 
+                  className="btn-secondary" 
+                  disabled={page >= totalPage} 
+                  onClick={() => setPage(page + 1)}
+                  style={{ padding: "6px 12px", fontSize: "0.875rem" }}
+                >
+                  Next
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

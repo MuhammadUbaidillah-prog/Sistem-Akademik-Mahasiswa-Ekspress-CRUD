@@ -14,7 +14,6 @@ export default function HomePage() {
           background: "var(--primary-gradient)",
           display: "flex",
           alignItems: "center",
-          justify: "center",
           boxShadow: "var(--shadow-glow)",
           color: "white",
           fontSize: "2rem",
