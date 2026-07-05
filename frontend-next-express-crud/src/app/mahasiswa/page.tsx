@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import MahasiswaForm from "@/components/MahasiswaForm";
 import MahasiswaTable from "@/components/MahasiswaTable";
+import { getToken, getUser, logout } from "@/lib/auth";
 import {
   createMahasiswa,
   deleteMahasiswa,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/api";
 
 export default function MahasiswaPage() {
+  const [user, setUser] = useState<any>(null);
   const [mahasiswa, setMahasiswa] = useState<Mahasiswa[]>([]);
   const [selectedMahasiswa, setSelectedMahasiswa] = useState<Mahasiswa | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,8 +32,22 @@ export default function MahasiswaPage() {
   const [totalPage, setTotalPage] = useState(1);
   const [total, setTotal] = useState(0);
 
+  // Auth Check
+  useEffect(() => {
+    const token = getToken();
+    const currentUser = getUser();
+    if (!token) {
+      window.location.href = "/login";
+    } else {
+      setUser(currentUser);
+    }
+  }, []);
+
   // Fetch list of prodi for the filter dropdown
   useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
     const fetchProdis = async () => {
       try {
         const data = await getProdi();
@@ -44,6 +60,9 @@ export default function MahasiswaPage() {
   }, []);
 
   const loadMahasiswa = async () => {
+    const token = getToken();
+    if (!token) return;
+
     try {
       setLoading(true);
       setError("");
@@ -66,16 +85,24 @@ export default function MahasiswaPage() {
 
   // Trigger reload when page changes
   useEffect(() => {
-    loadMahasiswa();
+    const token = getToken();
+    if (token) {
+      loadMahasiswa();
+    }
   }, [page]);
 
   // Trigger reload and reset to page 1 when prodi filter changes
   useEffect(() => {
-    setPage(1);
-    loadMahasiswa();
+    const token = getToken();
+    if (token) {
+      setPage(1);
+      loadMahasiswa();
+    }
   }, [prodiId]);
 
   const handleSearch = () => {
+    const token = getToken();
+    if (!token) return;
     setPage(1);
     loadMahasiswa();
   };
@@ -117,8 +144,8 @@ export default function MahasiswaPage() {
   };
 
   // Statistics calculation
-  const latestAngkatan = mahasiswa.length > 0 
-    ? Math.max(...mahasiswa.map((m) => m.angkatan)) 
+  const latestAngkatan = mahasiswa.length > 0
+    ? Math.max(...mahasiswa.map((m) => m.angkatan))
     : "-";
 
   return (
@@ -142,15 +169,32 @@ export default function MahasiswaPage() {
           </p>
         </div>
 
-        <Link href="/">
-          <button className="btn-secondary">
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          {user && (
+            <span style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+              Halo, <strong>{user.name}</strong> ({user.role})
+            </span>
+          )}
+
+          <button className="btn-danger" onClick={logout} style={{ padding: "8px 16px" }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
-            Kembali Beranda
+            Logout
           </button>
-        </Link>
+
+          <Link href="/">
+            <button className="btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Kembali Beranda
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Success/Error Alerts */}
@@ -311,22 +355,22 @@ export default function MahasiswaPage() {
 
               {/* Pagination Controls */}
               <div className="pagination-bar" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24, borderTop: "1px solid var(--border-color)", paddingTop: 16 }}>
-                <button 
-                  className="btn-secondary" 
-                  disabled={page <= 1} 
+                <button
+                  className="btn-secondary"
+                  disabled={page <= 1}
                   onClick={() => setPage(page - 1)}
                   style={{ padding: "6px 12px", fontSize: "0.875rem" }}
                 >
                   Previous
                 </button>
-                
+
                 <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-secondary)" }}>
                   Halaman {page} dari {totalPage || 1}
                 </span>
-                
-                <button 
-                  className="btn-secondary" 
-                  disabled={page >= totalPage} 
+
+                <button
+                  className="btn-secondary"
+                  disabled={page >= totalPage}
                   onClick={() => setPage(page + 1)}
                   style={{ padding: "6px 12px", fontSize: "0.875rem" }}
                 >

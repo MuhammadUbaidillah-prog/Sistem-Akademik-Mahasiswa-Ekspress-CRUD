@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import authRoutes from './routes/auth.route';
 import mahasiswaRoutes from './routes/mahasiswa.route';
 import prodiRoutes from './routes/prodi.route';
 
@@ -23,6 +24,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Backend Express berjalan' });
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/prodi', prodiRoutes);
 app.use('/api/mahasiswa', mahasiswaRoutes);
 
