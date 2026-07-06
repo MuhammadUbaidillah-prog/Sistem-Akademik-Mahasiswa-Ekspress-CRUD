@@ -6,11 +6,12 @@ type Props = {
   mahasiswa: Mahasiswa[];
   onEdit: (item: Mahasiswa) => void;
   onDelete: (id: number) => Promise<void>;
+  userRole?: string;
 };
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
-export default function MahasiswaTable({ mahasiswa, onEdit, onDelete }: Props) {
+export default function MahasiswaTable({ mahasiswa, onEdit, onDelete, userRole }: Props) {
   if (mahasiswa.length === 0) {
     return (
       <div style={{
@@ -113,31 +114,35 @@ export default function MahasiswaTable({ mahasiswa, onEdit, onDelete }: Props) {
                 </td>
                 <td>
                   <div className="actions" style={{ justifyContent: "flex-end" }}>
-                    <button 
-                      className="btn-secondary" 
-                      style={{ padding: 8 }}
-                      onClick={() => onEdit(item)}
-                      title="Edit Data"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-                      </svg>
-                    </button>
+                    {userRole && userRole !== "viewer" && (
+                      <button 
+                        className="btn-secondary" 
+                        style={{ padding: 8 }}
+                        onClick={() => onEdit(item)}
+                        title="Edit Data"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9"></path>
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                        </svg>
+                      </button>
+                    )}
 
-                    <button 
-                      className="btn-danger" 
-                      style={{ padding: 8 }}
-                      onClick={() => onDelete(item.id)}
-                      title="Hapus Data"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                      </svg>
-                    </button>
+                    {userRole === "admin" && (
+                      <button 
+                        className="btn-danger" 
+                        style={{ padding: 8 }}
+                        onClick={() => onDelete(item.id)}
+                        title="Hapus Data"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

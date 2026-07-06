@@ -264,15 +264,17 @@ export default function MahasiswaPage() {
       </div>
 
       {/* Main Content Layout Grid */}
-      <div className="grid">
+      <div className="grid" style={user?.role === 'viewer' ? { gridTemplateColumns: "1fr" } : {}}>
         {/* Left Side: Form Container */}
-        <div>
-          <MahasiswaForm
-            selectedMahasiswa={selectedMahasiswa}
-            onSubmit={handleSubmit}
-            onCancelEdit={() => setSelectedMahasiswa(null)}
-          />
-        </div>
+        {user?.role !== 'viewer' && (
+          <div>
+            <MahasiswaForm
+              selectedMahasiswa={selectedMahasiswa}
+              onSubmit={handleSubmit}
+              onCancelEdit={() => setSelectedMahasiswa(null)}
+            />
+          </div>
+        )}
 
         {/* Right Side: Table Container with Filters */}
         <div className="card">
@@ -351,6 +353,7 @@ export default function MahasiswaPage() {
                 mahasiswa={mahasiswa}
                 onEdit={setSelectedMahasiswa}
                 onDelete={handleDelete}
+                userRole={user?.role}
               />
 
               {/* Pagination Controls */}

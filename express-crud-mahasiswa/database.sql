@@ -50,3 +50,9 @@ INSERT INTO prodi (nama_prodi) VALUES
 INSERT INTO mahasiswa (nim, nama, prodi_id, angkatan, foto) VALUES 
 ('2201001', 'Ahmad Fauzi', 1, 2022, NULL),
 ('2201002', 'Budi Santoso', 2, 2022, NULL);
+
+-- Insert dummy users with different roles (password: password123)
+INSERT INTO users (name, email, password, role) VALUES
+('Admin Uji', 'admin@kampus.ac.id', '$2b$10$h5u8N5J99L76H17pxMxD/.JNPiFllOtl16n4CPx9f8wBDO3neywM.', 'admin'),
+('Operator Uji', 'operator@kampus.ac.id', '$2b$10$h5u8N5J99L76H17pxMxD/.JNPiFllOtl16n4CPx9f8wBDO3neywM.', 'operator'),
+('Viewer Uji', 'viewer@kampus.ac.id', '$2b$10$h5u8N5J99L76H17pxMxD/.JNPiFllOtl16n4CPx9f8wBDO3neywM.', 'viewer');
