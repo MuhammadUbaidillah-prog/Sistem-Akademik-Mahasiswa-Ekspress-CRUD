@@ -150,3 +150,132 @@ export async function deleteMahasiswa(id: number): Promise<void> {
   }
 }
 
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  role: "admin" | "operator" | "viewer";
+  created_at?: string;
+};
+
+export async function getUsers(): Promise<User[]> {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/users`, {
+    cache: "no-store",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const result = await response.json();
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+    }
+    throw new Error(result.message || "Gagal mengambil data user");
+  }
+  return result.data || [];
+}
+
+export async function createUser(data: Omit<User, "id"> & { password?: string }): Promise<any> {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/users`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+    }
+    throw new Error(result.message || "Gagal menambahkan user");
+  }
+  return result;
+}
+
+export async function updateUser(
+  id: number,
+  data: Partial<User>
+): Promise<any> {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/users/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+    }
+    throw new Error(result.message || "Gagal memperbarui data user");
+  }
+  return result;
+}
+
+export async function deleteUser(id: number): Promise<void> {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/users/${id}`, {
+    method: "DELETE",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+    }
+    throw new Error(result.message || "Gagal menghapus user");
+  }
+}
+
+export async function resetPassword(id: number): Promise<{ temporaryPassword: string; message: string }> {
+  const token = getToken();
+  const response = await fetch(`${API_URL}/users/${id}/reset-password`, {
+    method: "PATCH",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+      }
+    }
+    throw new Error(result.message || "Gagal mereset password");
+  }
+  return result;
+}
+

@@ -4,6 +4,7 @@ import path from 'path';
 import authRoutes from './routes/auth.route';
 import mahasiswaRoutes from './routes/mahasiswa.route';
 import prodiRoutes from './routes/prodi.route';
+import userRoutes from './routes/user.route';
 
 const app = express();
 
@@ -27,5 +28,6 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/prodi', prodiRoutes);
 app.use('/api/mahasiswa', mahasiswaRoutes);
+app.use('/api/users', userRoutes);
 
 export default app;

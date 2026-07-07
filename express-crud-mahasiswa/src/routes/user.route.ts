@@ -1,0 +1,24 @@
+import { Router } from "express";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import { allowRoles } from "../middlewares/role.middleware";
+import {
+  getAllUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  resetPasswordByAdmin,
+} from "../controllers/user.controller";
+
+const router = Router();
+
+// Proteksi rute user: hanya untuk admin yang sudah terautentikasi
+router.use(authMiddleware);
+router.use(allowRoles("admin"));
+
+router.get("/", getAllUsers);
+router.post("/", createUser);
+router.put("/:id", updateUser);
+router.delete("/:id", deleteUser);
+router.patch("/:id/reset-password", resetPasswordByAdmin);
+
+export default router;
